@@ -1,22 +1,23 @@
-import dataStore from 'nedb-promise';
+import {db} from '../index';
 
 export class UserStore {
-  constructor({ filename, autoload }) {
-    this.store = dataStore({ filename, autoload });
-  }
-  
-  findOne(props) {
-    return this.store.findOne(props);
-  }
-  
-  async insert(user) {
-    //
-    return this.store.insert(user);
-  };
+    constructor() {
+    }
+
+    async findOne(props) {
+        this.store = db.collection('users');
+        return this.store.findOne(props);
+    }
+
+    async insert(user) {
+        this.store = db.collection('users');
+        return this.store.insertOne(user);
+    };
 
     async update(props, user) {
-        return this.store.update(props, user);
+        this.store = db.collection('users');
+        return this.store.updateOne(props, user);
     }
 }
 
-export default new UserStore({ filename: './db/users.json', autoload: true });
+export default new UserStore();

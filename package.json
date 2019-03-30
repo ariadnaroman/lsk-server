@@ -17,6 +17,7 @@
     "koa-bodyparser": "^4.2.0",
     "koa-jwt": "^3.3.0",
     "koa-router": "^7.4.0",
+    "mongodb": "^3.2.2",
     "nedb-promise": "^2.0.1",
     "socket.io": "^2.2.0"
   },

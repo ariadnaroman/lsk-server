@@ -1,37 +1,41 @@
-import dataStore from 'nedb-promise';
+import {db} from '../index';
 
 export class SongStore {
-  constructor({ filename, autoload }) {
-    this.store = dataStore({ filename, autoload });
-  }
-  
-  async find(props) {
-    return this.store.find(props);
-  }
-  
-  async findOne(props) {
-    return this.store.findOne(props);
-  }
-  
-  async insert(song) {
-    let songTitle = song.title;
-    if (!songTitle) { // validation
-      throw new Error('Missing title property')
+    constructor() {
     }
-    let songArtist = song.artist;
-    if (!songArtist) { // validation
-      throw new Error('Missing artist property')
+
+    async find(props) {
+        this.store = db.collection('songs');
+        return this.store.find(props).toArray();
     }
-    return this.store.insert(song);
-  };
-  
-  async update(props, song) {
-    return this.store.update(props, song);
-  }
-  
-  async remove(props) {
-    return this.store.remove(props);
-  }
+
+    async findOne(props) {
+        this.store = db.collection('songs');
+        return this.store.findOne(props);
+    }
+
+    async insert(song) {
+        this.store = db.collection('songs');
+        let songTitle = song.title;
+        if (!songTitle) { // validation
+            throw new Error('Missing title property')
+        }
+        let songArtist = song.artist;
+        if (!songArtist) { // validation
+            throw new Error('Missing artist property')
+        }
+        return this.store.insertOne(song);
+    };
+
+    async update(props, song) {
+        this.store = db.collection('songs');
+        return this.store.updateOne(props, song);
+    }
+
+    async remove(props) {
+        this.store = db.collection('songs');
+        return this.store.remove(props);
+    }
 }
 
-export default new SongStore({ filename: './db/songs.json', autoload: true });
+export default new SongStore();

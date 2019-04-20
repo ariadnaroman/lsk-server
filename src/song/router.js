@@ -1,7 +1,7 @@
 import Router from 'koa-router';
 import songStore from './store';
 import userStore from "../auth/store";
-
+const ObjectId = require('mongodb').ObjectID;
 
 export const router = new Router();
 
@@ -13,10 +13,22 @@ router.get('/', async (ctx) => {
 });
 
 router.get('/:id', async (ctx) => {
-    const song = await songStore.findOne({_id: ctx.params.id});
+    const song = await songStore.findOne({_id: new ObjectId(ctx.params.id)});
     const response = ctx.response;
     if (song) {
         response.body = song;
+        response.status = 200; // ok
+    } else {
+        response.status = 404; // not found
+    }
+});
+
+router.get('/:id/recommendations', async (ctx) => {
+    const song = await songStore.findOne({_id: new ObjectId(ctx.params.id)});
+    const songs = await songStore.findRecommendations({ "songs": { $elemMatch: { "artist": song.artist, "title": song.title } } });
+    const response = ctx.response;
+    if (song) {
+        response.body = songs;
         response.status = 200; // ok
     } else {
         response.status = 404; // not found

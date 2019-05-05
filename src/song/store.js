@@ -37,6 +37,17 @@ export class SongStore {
         return this.store.find(props).toArray();
     }
 
+    async findPaginated(props, page, limit) {
+        this.store = db.collection('songs');
+        const skips = limit * (page - 1);
+        return this.store.find(props).skip(skips).limit(limit).toArray();
+    }
+
+    async size() {
+        const stats = await db.collection('songs').stats();
+        return stats.count;
+    }
+
     async findOne(props) {
         this.store = db.collection('songs');
         return this.store.findOne(props);

@@ -1,14 +1,34 @@
 import Router from 'koa-router';
 import songStore from './store';
 import userStore from "../auth/store";
+import {URL} from "url";
 const ObjectId = require('mongodb').ObjectID;
-
 export const router = new Router();
 
 router.get('/', async (ctx) => {
-    console.log("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%")
+    let page = 1;
+    let limit = 10;
+    let contains = null;
+    let songs  = [];
     const response = ctx.response;
-    response.body = await songStore.find({});
+    const url = new URL(`http://localhost:8100${ctx.url}`);
+    if (url.searchParams.get('title') && url.searchParams.get('artist')) {
+        let title = url.searchParams.get('title');
+        let artist = url.searchParams.get('artist');
+        let song = await songStore.findOne({"artist": artist, "title": title});
+        response.body = {song};
+        response.status = 200; // ok
+        return;
+    }
+    if (url.searchParams.get('contains')) contains = url.searchParams.get('contains');
+    if (url.searchParams.get('page')) page = parseInt(url.searchParams.get('page'));
+    if (url.searchParams.get('limit')) limit = parseInt(url.searchParams.get('limit'));
+    if (!contains) songs = await songStore.findPaginated({}, page, limit);
+    else songs = await songStore.findPaginated({ $or: [ { "artist": { "$regex": contains, "$options": "i" } }, { "title": { "$regex": contains, "$options": "i" } }] }, page, limit);
+    console.log(songs);
+    const size = await songStore.size();
+    const more = size > page*limit;
+    response.body = {songs, more};
     response.status = 200; // ok
 });
 
@@ -25,10 +45,10 @@ router.get('/:id', async (ctx) => {
 
 router.get('/:id/recommendations', async (ctx) => {
     const song = await songStore.findOne({_id: new ObjectId(ctx.params.id)});
-    const songs = await songStore.findRecommendations({ "songs": { $elemMatch: { "artist": song.artist, "title": song.title } } });
+    const recommendations = await songStore.findRecommendations({ "songs": { $elemMatch: { "artist": song.artist, "title": song.title } } });
     const response = ctx.response;
     if (song) {
-        response.body = songs;
+        response.body = { song, recommendations: recommendations.songs};
         response.status = 200; // ok
     } else {
         response.status = 404; // not found

@@ -8,4 +8,9 @@ build
 
 # misc
 .idea
+
+#package2-lock
 package-lock.json
+
+#database
+database

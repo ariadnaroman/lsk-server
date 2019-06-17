@@ -73,31 +73,31 @@ router.get('/:id/recommendations', async (ctx) => {
         const coordinates = cluster.coordinates;
         const x = parseInt(coordinates.x);
         const y = parseInt(coordinates.y);
-        const cluster1 = await songStore.findRecommendations({"coordinates": {"x": x-i, "y": y -i}});
-        const cluster2 = await songStore.findRecommendations({"coordinates": {"x": x+i, "y": y + i}});
-        const cluster3 = await songStore.findRecommendations({"coordinates": {"x": x-i, "y": y + i}});
-        const cluster4 = await songStore.findRecommendations({"coordinates": {"x": x+i, "y": y - i}});
+        const cluster1 = await songStore.findRecommendations({"coordinates": {"x": x - i, "y": y - i}});
+        const cluster2 = await songStore.findRecommendations({"coordinates": {"x": x + i, "y": y + i}});
+        const cluster3 = await songStore.findRecommendations({"coordinates": {"x": x - i, "y": y + i}});
+        const cluster4 = await songStore.findRecommendations({"coordinates": {"x": x + i, "y": y - i}});
         const cluster5 = await songStore.findRecommendations({"coordinates": {"x": x, "y": y + i}});
         const cluster6 = await songStore.findRecommendations({"coordinates": {"x": x, "y": y - i}});
         const cluster7 = await songStore.findRecommendations({"coordinates": {"x": x - i, "y": y}});
         const cluster8 = await songStore.findRecommendations({"coordinates": {"x": x + i, "y": y}});
         let ngh = [];
-        ngh = cluster1 && cluster1.mapped? ngh.concat(cluster1.mapped) : ngh;
-        ngh = cluster2 && cluster2.mapped? ngh.concat(cluster2.mapped) : ngh;
-        ngh = cluster3 && cluster3.mapped? ngh.concat(cluster3.mapped) : ngh;
-        ngh = cluster4 && cluster4.mapped? ngh.concat(cluster4.mapped) : ngh;
-        ngh = cluster5 && cluster5.mapped? ngh.concat(cluster5.mapped) : ngh;
-        ngh = cluster6 && cluster6.mapped? ngh.concat(cluster6.mapped) : ngh;
-        ngh = cluster7 && cluster7.mapped? ngh.concat(cluster7.mapped) : ngh;
-        ngh = cluster8 && cluster8.mapped? ngh.concat(cluster8.mapped) : ngh;
+        ngh = cluster1 && cluster1.mapped ? ngh.concat(cluster1.mapped) : ngh;
+        ngh = cluster2 && cluster2.mapped ? ngh.concat(cluster2.mapped) : ngh;
+        ngh = cluster3 && cluster3.mapped ? ngh.concat(cluster3.mapped) : ngh;
+        ngh = cluster4 && cluster4.mapped ? ngh.concat(cluster4.mapped) : ngh;
+        ngh = cluster5 && cluster5.mapped ? ngh.concat(cluster5.mapped) : ngh;
+        ngh = cluster6 && cluster6.mapped ? ngh.concat(cluster6.mapped) : ngh;
+        ngh = cluster7 && cluster7.mapped ? ngh.concat(cluster7.mapped) : ngh;
+        ngh = cluster8 && cluster8.mapped ? ngh.concat(cluster8.mapped) : ngh;
         ngh = getUnique(ngh, "track_id");
         let songsWithSameGenre2 = ngh.filter(s => s.genre === searchedSong.genre);
         // console.log(songsWithSameGenre2, "songsWithSameGenre2");
-        top10recommendations.push(...songsWithSameGenre2.slice(0, 10-top10recommendations.length));
+        top10recommendations.push(...songsWithSameGenre2.slice(0, 10 - top10recommendations.length));
         i++;
     }
-    console.log(top10recommendations,"top10recommendations")
-    console.log("Needed ",i, "iterations!")
+    console.log(top10recommendations, "top10recommendations")
+    console.log("Needed ", i, "iterations!")
     let response = ctx.response;
     if (cluster.mapped) {
         response.body = {song: searchedSong, recommendations: top10recommendations};
@@ -108,7 +108,7 @@ router.get('/:id/recommendations', async (ctx) => {
 });
 
 // GET user's playlist
-router.get('/playlist/:username', async (ctx) => {
+router.get('/:username/playlist', async (ctx) => {
     const user = await userStore.findOne({username: ctx.params.username});
     const response = ctx.response;
     if (user.songs) {
@@ -138,28 +138,32 @@ const createSong = async (song, response) => {
 router.post('/', async (ctx) => await createSong(ctx.request.body, ctx.response));
 
 // POST for add song to users playlist
-router.post('/playlist/:username', async (ctx) => {
+router.post('/:username/playlist', async (ctx) => {
     console.log("add");
     const user = await userStore.findOne({username: ctx.params.username});
     console.log(user, "user");
-    const songToAdd = ctx.request.body;
+    const songToAdd = ctx.request.body.song;
     console.log(songToAdd, "toAdd");
     const response = ctx.response;
-    if (user.songs && user.songs.length !== 0) {
-        console.log("not empty");
-        user.songs = user.songs.concat(songToAdd);
-        console.log(user);
-        await userStore.update({_id: user._id}, user);
-        response.body = user.songs;
-        response.status = 200; // ok
-    } else {
-        console.log("empty")
-        user.songs = [songToAdd];
-        console.log(user)
-        await userStore.update({_id: user._id}, user);
-        response.body = user.songs;
-        response.status = 200; // ok
+    try {
+        if (user.songs && user.songs.length !== 0) {
+            console.log("not empty", user.songs);
+            user.songs.push(songToAdd);
+            await userStore.updateOne({"_id": new ObjectId(user._id)}, {$set: {"songs": user.songs}});
+            response.body = user.songs;
+            response.status = 200; // ok
+        } else {
+            console.log("empty")
+            user.songs = [songToAdd];
+            console.log(user)
+            await userStore.updateOne({"_id": new ObjectId(user._id)}, {$set: {"songs": user.songs}});
+            response.body = user.songs;
+            response.status = 200; // ok
+        }
+    } catch (e) {
+        console.log(e);
     }
+
 });
 
 // POST for update song

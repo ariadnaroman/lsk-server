@@ -3,17 +3,22 @@ import userStore from './store';
 import jwt from 'jsonwebtoken';
 import {jwtConfig} from '../utils';
 import {inspect} from "util"
-import {decrypt, passwordMatch} from "../utils/authentication";
+import {decrypt, passwordMatch, sha512EncryptPassword} from "../utils/authentication";
 
 export const router = new Router();
 
 const createToken = (user) => {
-    return jwt.sign({username: user.username, _id: user._id}, jwtConfig.secret, {expiresIn: 60 * 60 * 60});
+    return jwt.sign({username: user.username}, jwtConfig.secret, {expiresIn: 60 * 60 * 60});
 };
 
 const createUser = async (user, response) => {
     try {
-        await userStore.insert(user);
+        const encrypted = sha512EncryptPassword(user.password);
+        await userStore.insert({
+            username: user.username,
+            password: encrypted.password,
+            salt: encrypted.salt
+        });
         response.body = {
             token: createToken(user),
             user: {
@@ -33,7 +38,6 @@ router.post('/signup', async (ctx) => await createUser(ctx.request.body, ctx.res
 router.post('/login', async (ctx) => {
     try {
         const credentials = ctx.request.body;
-        console.log(credentials);
         const response = ctx.response;
         const user = await userStore.findOne({username: credentials.username});
         if (user && passwordMatch(user.password, user.salt, credentials.password)) {

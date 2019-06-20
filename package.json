@@ -21,7 +21,8 @@
     "mongodb": "^3.2.2",
     "nedb-promise": "^2.0.1",
     "papaparse": "^4.6.3",
-    "socket.io": "^2.2.0"
+    "socket.io": "^2.2.0",
+    "spotify-web-helper": "^1.14.0"
   },
   "devDependencies": {
     "algorithmia": "^0.3.10",

@@ -4,14 +4,27 @@ export function generateSalt() {
     return crypto.randomBytes(8).toString('hex').slice(0, 16);
 }
 
-export function sha512EncryptPassword(password, salt) {
+export function sha512EncryptPassword(password) {
+    const salt  = generateSalt();
     const hash = crypto.createHmac('sha512', salt);
     hash.update(password);
-    return hash.digest('hex');
+    return {
+        password: hash.digest('hex'),
+        salt: salt
+    };
+}
+
+export function sha512EncryptPasswordWithSalt(password, salt) {
+    const hash = crypto.createHmac('sha512', salt);
+    hash.update(password);
+    return {
+        password: hash.digest('hex'),
+        salt: salt
+    };
 }
 
 export function passwordMatch(dbPassword, salt, password) {
-    const encryptedPassword = sha512EncryptPassword(password, salt);
+    const encryptedPassword = sha512EncryptPasswordWithSalt(password, salt).password;
     return dbPassword === encryptedPassword;
 }
 

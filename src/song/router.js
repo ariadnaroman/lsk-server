@@ -10,7 +10,7 @@ export const router = new Router();
 // GET songs by page, limit, title, artist or contains
 router.get('/', async (ctx) => {
     let page = 1;
-    let limit = 10;
+    let limit = 20;
     let contains = null;
     let songs = [];
     const response = ctx.response;

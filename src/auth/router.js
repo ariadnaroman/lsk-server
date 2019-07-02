@@ -13,6 +13,8 @@ const createToken = (user) => {
 
 const createUser = async (user, response) => {
     try {
+        const userFromStore = await userStore.findOne({username: user.username});
+        if (userFromStore) throw new Error("This username has already been used!");
         const encrypted = sha512EncryptPassword(user.password);
         await userStore.insert({
             username: user.username,

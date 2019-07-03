@@ -67,7 +67,7 @@ router.get('/:id/recommendations', async (ctx) => {
     top10recommendations.push(...songsWithSameGenre.slice(0, 10));
     // console.log(top10recommendations,"top10recommendations")
     let i = 1;
-    while (top10recommendations.length < 10) {
+    while (top10recommendations.length < 10 && i <= 10) {
         //let otherSongs = list.filter(s => s.genre !== searchedSong.genre);
         //top10recommendations.push(...otherSongs.slice(0, 10 - top10recommendations.length));
         const coordinates = cluster.coordinates;
@@ -100,8 +100,19 @@ router.get('/:id/recommendations', async (ctx) => {
     console.log("Needed ", i, "iterations!")
     let response = ctx.response;
     if (cluster.mapped) {
-        response.body = {song: searchedSong, recommendations: top10recommendations};
-        response.status = 200; // ok
+        if (i <= 10) {
+            response.body = {song: searchedSong, recommendations: top10recommendations};
+            response.status = 200; // ok
+        } else {
+            let firstlist = list.filter(s => s.track_id !== ctx.params.id).slice(0, 10);
+            if (firstlist.length > 0) {
+                response.body = {song: searchedSong, recommendations: firstlist};
+                response.status = 200;
+            } else {
+                response.status = 400;
+            }
+        }
+
     } else {
         response.status = 404; // not found
     }

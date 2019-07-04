@@ -133,77 +133,50 @@ router.get('/:username/playlist', async (ctx) => {
     }
 });
 
-const createSong = async (song, response) => {
-    try {
-        const songDetails = await songStore.insert(song);
-        response.body = songDetails;
-        console.log("SONG ADDED: ", songDetails)
-        response.status = 201; // created
-    } catch (err) {
-        response.body = {issue: [{error: err.message}]};
-        response.status = 400; // bad request
-    }
-};
-
-// POST for add song
-router.post('/', async (ctx) => await createSong(ctx.request.body, ctx.response));
-
-// POST for add song to users playlist
+// POST for add/delete song to users playlist
 router.post('/:username/playlist', async (ctx) => {
     console.log("add");
     const user = await userStore.findOne({username: ctx.params.username});
     console.log(user, "user");
-    const songToAdd = ctx.request.body.song;
-    console.log(songToAdd, "toAdd");
+    const songToAdd = ctx.request.body.songToAdd;
+    const songToDelete = ctx.request.body.songToDelete;
     const response = ctx.response;
-    try {
-        if (user.songs && user.songs.length !== 0) {
-            console.log("not empty", user.songs);
-            user.songs.push(songToAdd);
-            await userStore.updateOne({"_id": new ObjectId(user._id)}, {$set: {"songs": user.songs}});
-            response.body = user.songs;
-            response.status = 200; // ok
-        } else {
-            console.log("empty")
-            user.songs = [songToAdd];
-            console.log(user)
-            await userStore.updateOne({"_id": new ObjectId(user._id)}, {$set: {"songs": user.songs}});
-            response.body = user.songs;
-            response.status = 200; // ok
+    if (songToAdd) {
+        console.log(songToAdd, "toAdd");
+        try {
+            if (user.songs && user.songs.length !== 0) {
+                console.log("not empty", user.songs);
+                user.songs.push(songToAdd);
+                await userStore.updateOne({"_id": new ObjectId(user._id)}, {$set: {"songs": user.songs}});
+                response.body = user.songs;
+                response.status = 200; // ok
+            } else {
+                console.log("empty")
+                user.songs = [songToAdd];
+                console.log(user)
+                await userStore.updateOne({"_id": new ObjectId(user._id)}, {$set: {"songs": user.songs}});
+                response.body = user.songs;
+                response.status = 200; // ok
+            }
+        } catch (e) {
+            console.log(e);
         }
-    } catch (e) {
-        console.log(e);
-    }
-
-});
-
-// POST for update song
-router.put('/:id', async (ctx) => {
-    const song = ctx.request.body;
-    const id = ctx.params.id;
-    const songId = song._id;
-    const response = ctx.response;
-    if (songId && songId !== id) {
-        response.body = {issue: [{error: 'Param id and body _id should be the same'}]};
-        response.status = 400; // bad request
-        return;
-    }
-    if (!songId) {
-        await createSong(song, response);
+    } else if (songToDelete) {
+        console.log(songToDelete, "toDelete");
+        try {
+            if (user.songs && user.songs.length !== 0) {
+                console.log("not empty", user.songs);
+                user.songs = user.songs.filter(s => s.track_id !== songToDelete.track_id);
+                await userStore.updateOne({"_id": new ObjectId(user._id)}, {$set: {"songs": user.songs}});
+            }
+            response.body = user.songs;
+            response.status = 200; // ok
+        } catch (e) {
+            console.log(e);
+            response.status = 500;
+        }
     } else {
-        const updatedCount = await songStore.update({_id: id}, song);
-        if (updatedCount === 1) {
-            response.body = song;
-            response.status = 200; // ok
-        } else {
-            response.body = {issue: [{error: 'Resource no longer exists'}]};
-            response.status = 405; // method not allowed
-        }
+        response.status = 400; //bad request
     }
 });
 
-// DELETE for delete song by id
-router.del('/:id', async (ctx) => {
-    await songStore.remove({_id: ctx.params.id});
-    ctx.response.status = 204; // no content
-});

@@ -95,9 +95,9 @@ function initializeCodebookVectors(gridWidth, gridHeight, domain) {
  * @param neighbourhoodInitSize: initial value for the radius of the neighbourhood (number of units)
  * @returns {number} the value of the neighbourhood size
  */
-function calculateNeighbourhoodSize(iteration, iterMax, neighbourhoodInitSize) {
+exports.calculateNeighbourhoodSize = function(iteration, iterMax, neighbourhoodInitSize) {
     return neighbourhoodInitSize * (1.0 - (iteration / iterMax))
-}
+};
 
 /**
  *  The function calculates the learning rate of the corresponding iteration, based on the learning percentage and the initial value of the learning rate
@@ -106,13 +106,13 @@ function calculateNeighbourhoodSize(iteration, iterMax, neighbourhoodInitSize) {
  * @param learningPercentage: value for learning percentage
  * @returns {number} the value of the learning rate
  */
-function calculateLearningRate(learnInitRate, learningPercentage, i) {
+exports.calculateLearningRate = function(learnInitRate, learningPercentage, i) {
     return learnInitRate*Math.pow(i,Math.log2(learningPercentage));
-}
+};
 
-function selectInputPattern(iteration, inputPatterns) {
+exports.selectInputPattern = function(iteration, inputPatterns) {
     return inputPatterns[iteration % inputPatterns.length];
-}
+};
 
 /**
  * The function selects the BMU of the codebook vectors for the given input pattern
@@ -138,7 +138,7 @@ function selectBestMatchingUnit(pattern, codebookVectors) {
  * @param vector2: array of attributes
  * @returns number euclidean distance between the two vectors
  */
-function euclidean_distance(vector1, vector2) {
+exports.euclidean_distance = function(vector1, vector2) {
     let sum = 0.0;
     for (let attribute in vector1) {
         if (vector2 && vector2[attribute]) sum += Math.pow(vector1[attribute] - vector2[attribute], 2);
@@ -153,9 +153,9 @@ function euclidean_distance(vector1, vector2) {
  * @param neighbourhoodSize: the radius (measured in units) of the neighbourhood
  * @returns {Array} the list of objects {x, y} which contain the coordinates of the neurons of the neighbourhood
  */
-function getHexagonIndexes(x, y, neighbourhoodSize, gridWidth, gridHeight) {
+exports.getHexagonIndexes = function(x, y, neighbourhoodSize, gridWidth, gridHeight) {
     let results = [];
-    istart = x- neighbourhoodSize >= 0 ? (x-neighbourhoodSize) : 0;
+    let istart = x- neighbourhoodSize >= 0 ? (x-neighbourhoodSize) : 0;
     for (let i = istart; i <= x + neighbourhoodSize && i<gridHeight; i++) {
         let start;
         let end;
@@ -214,7 +214,7 @@ function selectNeighbours(bmu, codebookVectors, gridType, neighbourhoodSize, gri
     return neighbours;
 }
 
-function randomVector(domain) {
+exports.randomVector = function(domain) {
     let vector = [];
     for (let attribute in domain) {
         vector[attribute] = domain[attribute][0] + (domain[attribute][1] - domain[attribute][0]) * Math.random();
@@ -223,4 +223,4 @@ function randomVector(domain) {
         }
     }
     return vector;
-}
+};
